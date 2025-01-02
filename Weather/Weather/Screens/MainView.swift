@@ -9,52 +9,38 @@ import SwiftUI
 
 struct MainView: View {
     @StateObject private var viewModel = WeatherViewModel()
-    @AppStorage("locationInput") private var locationInput: String = ""
 
-        var body: some View {
-            NavigationView {
-                VStack {
-                    
-                    SearchBarView()
-
-                    
-                    if let weatherData = viewModel.weatherDataModel {
-                        ScrollView {
-                            VStack(spacing: 16) {
-                                
-                                    HourlyWeatherView(hourlyWeatherData: [weatherData])
-                                                            
-
-                                Rectangle().frame(height: 1).foregroundColor(.gray)
-
-                                
-                                DailyWeatherView(weatherData: [weatherData])
-                            }
-                            .padding()
+    var body: some View {
+        NavigationView {
+            VStack {
+                if let weatherData = viewModel.weatherDataModel {
+                    ScrollView {
+                        VStack(spacing: 16) {
+                            HourlyWeatherView(hourlyWeatherData: [weatherData])
+                            Rectangle().frame(height: 1).foregroundColor(.gray)
+                            DailyWeatherView(weatherData: [weatherData])
                         }
-                    } else if let errorMessage = viewModel.errorMessage {
-                        Text(errorMessage)
-                            .foregroundColor(.red)
-                            .multilineTextAlignment(.center)
-                            .padding()
-                    } else {
-                        Text("Enter a city name to see the weather.")
-                            .foregroundColor(.gray)
-                            .padding()
+                        .padding()
                     }
+                } else if let errorMessage = viewModel.errorMessage {
+                    Text(errorMessage)
+                        .foregroundColor(.red)
+                        .multilineTextAlignment(.center)
+                        .padding()
+                } else {
+                    Text("Fetching weather for your current location...")
+                        .foregroundColor(.gray)
+                        .padding()
                 }
-                .navigationTitle("Weather App")
-                .onAppear {
-                    if locationInput.isEmpty {
-                        Task {
-                            await viewModel.fetchGeoData(city: "London", state: "", country: "")
-                        }
-                    }
-                }
+            }
+            .navigationTitle("Weather App")
+            .onAppear {
+                viewModel.fetchCurrentLocationWeather()
             }
         }
     }
+}
 
-    #Preview {
-        MainView()
-    }
+#Preview {
+    MainView()
+}

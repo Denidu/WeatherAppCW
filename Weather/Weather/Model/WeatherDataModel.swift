@@ -90,8 +90,7 @@ struct Current: Codable, Identifiable {
 }
 
 // MARK: - Rain
-struct Rain: Codable, Identifiable {
-    let id = UUID()
+struct Rain: Codable{
     let the1H: Double
 
     enum CodingKeys: String, CodingKey {
@@ -103,7 +102,7 @@ struct Rain: Codable, Identifiable {
 }
 
 // MARK: - Weather
-struct Weather: Codable, Identifiable {
+struct Weather: Codable{
     let id: Int
     let main: Main
     let weatherDescription: Description
@@ -258,8 +257,7 @@ struct Daily: Codable, Identifiable {
 }
 
 // MARK: - FeelsLike
-struct FeelsLike: Codable, Identifiable {
-    var id = UUID()
+struct FeelsLike: Codable{
     let day, night, eve, morn: Double
     
     enum CodingKeys: String, CodingKey{
@@ -271,8 +269,7 @@ struct FeelsLike: Codable, Identifiable {
 }
 
 // MARK: - Temp
-struct Temp: Codable, Identifiable {
-    let id = UUID()
+struct Temp: Codable{
     let day, min, max, night: Double
     let eve, morn: Double
     
@@ -285,8 +282,7 @@ struct Temp: Codable, Identifiable {
 }
 
 // MARK: - Minutely
-struct Minutely: Codable, Identifiable {
-    let id = UUID()
+struct Minutely: Codable {
     let dt: Int
     let precipitation: Double
     
@@ -296,6 +292,7 @@ struct Minutely: Codable, Identifiable {
     static func emptyInit() -> Minutely {
         return Minutely(dt: 0, precipitation: 0.0)
     }
+    
 }
 
 

@@ -7,17 +7,32 @@
 
 import Foundation
 import CoreLocation
-import SwiftUICore
+import SwiftUI
 
 class WeatherViewModel: ObservableObject {
-    
     @Published var weatherDataModel: WeatherDataModel?
     @Published var geoDataModel: GeoDataModel?
     @Published var errorMessage: String?
-    
+
     private let apiClient = OpenweatherAPI()
-    
-    func fetchWeatherForCurrentLocation(lat: Double, lon: Double) async {
+    private let locationManager = LocationManager()
+
+    init(weatherData: WeatherDataModel? = nil, geoData: GeoDataModel? = nil) {
+        self.weatherDataModel = weatherData
+        self.geoDataModel = geoData
+
+        locationManager.onLocationUpdate = { [weak self] location in
+            Task {
+                await self?.fetchWeatherData(lat: location.latitude, lon: location.longitude)
+            }
+        }
+    }
+
+    func fetchCurrentLocationWeather() {
+        locationManager.requestLocation()
+    }
+
+    func fetchWeatherData(lat: Double, lon: Double) async {
         do {
             let weatherData = try await withCheckedThrowingContinuation { continuation in
                 apiClient.fetchWeather(lat: lat, lon: lon) { weatherData, error in
@@ -28,36 +43,22 @@ class WeatherViewModel: ObservableObject {
                     }
                 }
             }
-            self.weatherDataModel = weatherData
-        } catch {
-            self.errorMessage = error.localizedDescription
-        }
-    }
-    
-    func fetchWeatherData(lat: Double, lon: Double) async throws {
-        do {
-            let weatherData = try await withCheckedThrowingContinuation { continuation in
-                apiClient.fetchWeather(lat: lat, lon: lon) { weatherData, error in
-                    if let weatherData = weatherData {
-                        print("Fetched Weather Data: \(weatherData)")  // Debugging line
-                        continuation.resume(returning: weatherData)
-                    } else if let error = error {
-                        continuation.resume(throwing: error)
-                    }
-                }
+
+            await MainActor.run {
+                self.weatherDataModel = weatherData
             }
-            self.weatherDataModel = weatherData
         } catch {
-            self.errorMessage = error.localizedDescription
+            await MainActor.run {
+                self.errorMessage = error.localizedDescription
+            }
         }
     }
-    
-    func fetchGeoData(city: String, state: String, country: String, limit: Int = 1) async {
+
+    func fetchGeoData(city: String, state: String, country: String, limit: Int = 1) async throws {
         do {
             let geoData = try await withCheckedThrowingContinuation { continuation in
                 apiClient.fetchCoordinates(city: city, state: state, country: country, limit: limit) { geoDataModel, error in
                     if let geoDataModel = geoDataModel {
-                        print("Fetched Geo Data: \(geoDataModel)")  // Debugging line
                         continuation.resume(returning: geoDataModel)
                     } else if let error = error {
                         continuation.resume(throwing: error)
@@ -66,19 +67,19 @@ class WeatherViewModel: ObservableObject {
                     }
                 }
             }
-            
-            let lat = geoData.lat
-            let lon = geoData.lon
-            try await fetchWeatherData(lat: lat, lon: lon)
-            
-            DispatchQueue.main.async {
+
+            await MainActor.run {
                 self.geoDataModel = geoData
             }
-            
+            await fetchWeatherData(lat: geoData.lat, lon: geoData.lon)
         } catch let fetchError {
-            DispatchQueue.main.async {
+            await MainActor.run {
                 self.errorMessage = fetchError.localizedDescription
             }
         }
+    }
+
+    func getWeatherDataForUI() -> (geoData: GeoDataModel?, weatherData: WeatherDataModel?) {
+        return (geoDataModel, weatherDataModel)
     }
 }

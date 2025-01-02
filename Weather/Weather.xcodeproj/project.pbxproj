@@ -34,9 +34,22 @@
 		ABCA4EC22D2155430026ACE6 /* WeatherUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WeatherUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		ABBBAAF02D255A7000D2139D /* Exceptions for "Weather" folder in "Weather" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = ABCA4EA72D2155420026ACE6 /* Weather */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		ABCA4EAA2D2155420026ACE6 /* Weather */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				ABBBAAF02D255A7000D2139D /* Exceptions for "Weather" folder in "Weather" target */,
+			);
 			path = Weather;
 			sourceTree = "<group>";
 		};
@@ -394,6 +407,7 @@
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Weather/Info.plist;
 				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "We need your location to provide weather information, even when the app is in the background";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We need your location to show the weather information for your current location";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -425,6 +439,7 @@
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Weather/Info.plist;
 				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "We need your location to provide weather information, even when the app is in the background";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We need your location to show the weather information for your current location";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

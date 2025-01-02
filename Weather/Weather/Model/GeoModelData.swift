@@ -10,7 +10,6 @@ import Foundation
 import Foundation
 
 class GeoDataModel: Codable, Identifiable{
-    let id = UUID()
     let name: String
     let localNames: [String:String]?
     let lat: Double
@@ -19,7 +18,6 @@ class GeoDataModel: Codable, Identifiable{
     let state: String?
     
     enum CodingKeys: String, CodingKey {
-        case id
         case name
         case localNames = "local_names"
         case lat
@@ -27,4 +25,23 @@ class GeoDataModel: Codable, Identifiable{
         case country
         case state
     }
+    init(name: String, localNames: [String: String]?, lat: Double, lon: Double, country: String, state: String?) {
+            self.name = name
+            self.localNames = localNames ?? [:] 
+            self.lat = lat
+            self.lon = lon
+            self.country = country
+            self.state = state ?? "Unknown"
+        }
+    
+    static func emptyInit() -> GeoDataModel {
+            return GeoDataModel(
+                name: "",
+                localNames: [:],
+                lat: 0.0,
+                lon: 0.0,
+                country: "",
+                state: nil
+            )
+        }
 }
