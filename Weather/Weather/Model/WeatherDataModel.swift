@@ -13,7 +13,7 @@ struct WeatherDataModel: Codable, Identifiable {
     let timezone: String
     let timezoneOffset: Int
     let current: Current
-    let minutely: [Minutely]
+    let minutely: [Minutely]?
     let hourly: [Current]
     let daily: [Daily]
 
@@ -102,26 +102,26 @@ struct Rain: Codable{
 }
 
 // MARK: - Weather
-struct Weather: Codable{
+struct Weather: Codable {
     let id: Int
     let main: Main
-    let weatherDescription: Description
+    let description: String
     let icon: String
 
     enum CodingKeys: String, CodingKey {
-        case id, main
-        case weatherDescription = "description"
-        case icon
+        case id, main, description, icon
     }
+
     static func emptyInit() -> Weather {
         return Weather(
             id: 0,
             main: .clear,
-            weatherDescription: .clearSky,
+            description: "", 
             icon: ""
         )
     }
 }
+
 
 enum Main: String, Codable {
     case clear = "Clear"
@@ -176,12 +176,12 @@ enum Description: String, Codable {
     case raggedShowerRain = "ragged shower rain"
     case lightSnow = "light snow"
     case Snow = "Snow"
+    case RainAndSnow = "rain and snow"
     case HeavySnow = "Heavy snow"
     case Sleet = "Sleet"
     case LightShowerSleet = "Light shower sleet"
     case ShowerSleet = "Shower sleet"
     case LightRainAndSnow = "Light rain and snow"
-    case RainAndSnow = "Rain and snow"
     case LightShowerSnow = "Light shower snow"
     case ShowerSnow = "Shower snow"
     case HeavyShowerSnow = "Heavy shower snow"

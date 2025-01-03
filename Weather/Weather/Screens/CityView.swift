@@ -8,61 +8,141 @@
 import SwiftUI
 
 struct CityView: View {
+    var weatherData: WeatherDataModel?
+    @AppStorage("locationInput") private var locationInput: String = ""
+    @AppStorage("favoriteCities") private var favoriteCities: String = ""
     @Environment(\.presentationMode) var presentationMode
-    @Binding var favoriteCities: [GeoDataModel]
-    @StateObject var viewModel: WeatherViewModel
 
-    var body: some View {
-        VStack(spacing: 16) {
-            if let geoData = viewModel.geoDataModel {
-                Text(geoData.name)
-                    .font(.largeTitle)
-                    .bold()
-
-                if let weatherData = viewModel.weatherDataModel {
-                    Text(String(format: "%.0f°", weatherData.current.temp))
-                        .font(.system(size: 68))
-                        .bold()
-
-                    if let weatherDescription = weatherData.current.weather.first?.weatherDescription.rawValue {
-                        Text(weatherDescription.capitalized)
-                            .font(.title)
-                            .foregroundColor(.gray)
-                    }
-
-                    HStack {
-                        Text(String(format: "H: %.0f°", weatherData.daily.first?.temp.max ?? 0))
-                            .font(.headline)
-                        Text(String(format: "L: %.0f°", weatherData.daily.first?.temp.min ?? 0))
-                            .font(.headline)
-                    }
-                }
-            }
-
-            Spacer()
+    private var isFavorite: Bool {
+        favoriteCities.split(separator: ",").contains(where: { $0.trimmingCharacters(in: .whitespaces) == locationInput })
+    }
+    
+    private func toggleFavorite() {
+        var updatedFavorites = Set(favoriteCities.split(separator: ",").map { String($0) })
+        
+        if isFavorite {
+            updatedFavorites.remove(locationInput)
+        } else {
+            updatedFavorites.insert(locationInput)
         }
-        .padding()
-        .navigationBarItems(
-            trailing: Button("Add") {
-                addCityToFavorites()
-            }
-        )
-        .onAppear {
-            if let geoData = viewModel.geoDataModel {
-                Task {
-                    await viewModel.fetchWeatherData(lat: geoData.lat, lon: geoData.lon)
-                }
-            }
-        }
+        
+        favoriteCities = updatedFavorites.joined(separator: ",")
     }
 
-    private func addCityToFavorites() {
-        favoriteCities.append(viewModel.geoDataModel ?? GeoDataModel.emptyInit()) // Add the city to the favorites list
-        presentationMode.wrappedValue.dismiss() // Dismiss the current view after adding
+    var body: some View {
+        NavigationView {
+            ScrollView {
+                VStack {
+                    Spacer().frame(height: 40)  // Space before city name
+                    
+                    if let weatherData = weatherData {
+                        VStack(alignment: .center, spacing: 10) {
+                            HStack {
+                                Text(locationInput)
+                                    .font(.system(size: 36, weight: .medium))
+                                
+                                Button(action: {
+                                    toggleFavorite()
+                                }) {
+                                    Image(systemName: isFavorite ? "star.fill" : "star")
+                                        .foregroundColor(.blue)
+                                        .font(.title)
+                                        .padding(.leading)
+                                }
+                            }
+
+                            Text("\(Int(weatherData.current.temp))°")
+                                .font(.system(size: 96, weight: .thin))
+                            
+                            Text(weatherData.current.weather.first?.description.capitalized ?? "")
+                                .font(.title3)
+                            
+                            Text("H:\(Int(weatherData.daily[0].temp.max))° L:\(Int(weatherData.daily[0].temp.min))°")
+                                .font(.title3)
+                        }
+                        .padding()
+
+                        // Hourly forecast
+                        VStack(alignment: .leading, spacing: 20) {
+                            Text("HOURLY FORECAST")
+                                .font(.caption)
+                                .padding(.top)
+                            
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 20) {
+                                    ForEach(weatherData.hourly.prefix(6), id: \.dt) { hour in
+                                        VStack {
+                                            let formattedDate = DateFormatterUtils.formattedDate12Hour(from: TimeInterval(hour.dt))
+                                            Text(formattedDate)
+
+                                            let iconName = hour.weather.first?.icon ?? "default-icon"
+                                            let iconUrl = "http://openweathermap.org/img/wn/\(iconName)@2x.png"
+                                            
+                                            AsyncImage(url: URL(string: iconUrl)) { image in
+                                                image.resizable()
+                                                    .scaledToFit()
+                                                    .frame(width: 50, height: 50)
+                                            } placeholder: {
+                                                ProgressView()
+                                            }
+                                            
+                                            Text("\(Int(hour.temp))°")
+                                        }
+                                    }
+                                }
+                                .padding(.horizontal)
+                            }
+                        }
+                        .padding()
+
+                        // 10-day forecast
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("10-DAY FORECAST")
+                                .font(.caption)
+                                .padding(.top)
+                            
+                            ForEach(weatherData.daily.prefix(6), id: \.dt) { day in
+                                HStack {
+                                    let formattedDate = DateFormatterUtils.formattedDateWithWeekdayAndDay(from: TimeInterval(day.dt))
+                                    Text(formattedDate)
+                                    Spacer()
+                                    
+                                    let iconName = day.weather.first?.icon ?? "default-icon"
+                                    let iconUrl = "http://openweathermap.org/img/wn/\(iconName)@2x.png"
+                                    
+                                    AsyncImage(url: URL(string: iconUrl)) { image in
+                                        image.resizable()
+                                            .scaledToFit()
+                                            .frame(width: 50, height: 50)
+                                    } placeholder: {
+                                        ProgressView()
+                                    }
+                                    
+                                    Text("\(Int(day.temp.min))°")
+                                        .frame(width: 30, alignment: .trailing)
+                                    TempBarView(min: day.temp.min, max: day.temp.max)
+                                        .frame(width: 100)
+                                    Text("\(Int(day.temp.max))°")
+                                        .frame(width: 30, alignment: .trailing)
+                                }
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
+                    else {
+                        Text("No weather data available.")
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .multilineTextAlignment(.center)
+                    }
+                }
+                .onAppear {
+                    print("Requesting location from CityView...")
+                }
+            }
+        }
     }
 }
 
 #Preview {
-    CityView(favoriteCities: .constant([]), viewModel: WeatherViewModel())
+    CityView(weatherData: nil)
 }
-

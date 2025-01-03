@@ -2,9 +2,24 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>Your location is used to show weather updates</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Your location is required for background weather updates</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>We need your location to show weather data.</string>
+    <key>NSLocationAlwaysUsageDescription</key>
+    <string>We need your location to show weather data even when the app is in the background.</string>
+    
+    <!-- App Transport Security configuration -->
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSAllowsArbitraryLoads</key>
+        <true/>
+        <key>NSExceptionDomains</key>
+        <dict>
+            <key>openweathermap.org</key>
+            <dict>
+                <key>NSExceptionAllowsInsecureHTTPLoads</key>
+                <true/>
+            </dict>
+        </dict>
+    </dict>
 </dict>
 </plist>

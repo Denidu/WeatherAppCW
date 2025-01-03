@@ -5,104 +5,90 @@
 //  Created by Denidu Gamage on 2024-12-29.
 //
 
-
-import CoreLocation
 import Foundation
+import CoreLocation
 
-class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
-    private let locationManager = CLLocationManager()
-    private let geocoder = CLGeocoder()
-
-    @Published var currentLocation: CLLocationCoordinate2D?
-    @Published var locationName: String?
-    @Published var errorMessage: String?
-    var onLocationUpdate: ((CLLocationCoordinate2D) -> Void)?
-    var weatherViewModel: WeatherViewModel?
-    private var isRequestingLocation = false
-    private var isUpdatingWeather = false
-
+class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
+    private var locationManager: CLLocationManager
+    @Published var currentLocation: CLLocation?
+    @Published var locationError: Error?
+    @Published var isRequestInProgress = false
+    
     override init() {
+        locationManager = CLLocationManager()
         super.init()
         locationManager.delegate = self
-        locationManager.desiredAccuracy = kCLLocationAccuracyBest
-        locationManager.requestWhenInUseAuthorization()
-        print("LocationManager initialized and authorization requested.")
+        locationManager.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
     }
-
+    
     func requestLocation() {
-        guard !isRequestingLocation else {
-            print("Location request is already in progress.")
-            return
-        }
-
+        guard !isRequestInProgress else { return }
+        isRequestInProgress = true
+        
         if CLLocationManager.locationServicesEnabled() {
-            isRequestingLocation = true
-            print("Requesting location update.")
-            locationManager.requestLocation()
-        } else {
-            errorMessage = "Location services are disabled. Please enable them in Settings."
-            print("Location services are disabled.")
-        }
-    }
-
-    func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
-        print("Authorization status changed: \(status.rawValue)")
-        switch status {
-        case .authorizedWhenInUse, .authorizedAlways:
-            print("Authorization granted. Requesting location.")
-            requestLocation()
-        case .denied, .restricted:
-            errorMessage = "Location access is denied. Please enable it in Settings."
-            print("Location access denied.")
-        case .notDetermined:
-            print("Authorization not determined. Requesting authorization.")
             locationManager.requestWhenInUseAuthorization()
-        @unknown default:
-            print("Unknown authorization status.")
+            
+            // Timeout fallback after 10 seconds
+            DispatchQueue.main.asyncAfter(deadline: .now() + 10) {
+                if self.currentLocation == nil {
+                    self.locationError = NSError(domain: "LocationError", code: 2, userInfo: [NSLocalizedDescriptionKey: "Unable to fetch location. Please try again."])
+                    self.isRequestInProgress = false
+                }
+            }
+        } else {
+            locationError = NSError(domain: "LocationError", code: 0, userInfo: [NSLocalizedDescriptionKey: "Location services are disabled."])
+            isRequestInProgress = false
         }
     }
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        isRequestingLocation = false
-
-        guard !isUpdatingWeather, let location = locations.last else { return }
-        print("Location updated: Latitude: \(location.coordinate.latitude), Longitude: \(location.coordinate.longitude)")
-
-        currentLocation = location.coordinate
-        reverseGeocode(location: location)
-
-        let lat = location.coordinate.latitude
-        let lon = location.coordinate.longitude
-
-        Task {
-            do {
-                print("Fetching weather data for lat: \(lat), lon: \(lon)")
-                 await weatherViewModel?.fetchWeatherData(lat: lat, lon: lon)
-                print("Weather update completed.")
-            } catch {
-                print("Weather fetch failed: \(error.localizedDescription)")
-            }
-            isUpdatingWeather = false
+        guard let location = locations.first else {
+            print("No location found") // Debugging log
+            return
         }
+        print("Updated Location: \(location.coordinate.latitude), \(location.coordinate.longitude)") // Debugging log
+        currentLocation = location
+        isRequestInProgress = false
     }
-
+    
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        isRequestingLocation = false
-        errorMessage = "Failed to get your location: \(error.localizedDescription)"
-        print("Location fetching error: \(error.localizedDescription) (\(error as NSError).code)")
+        if let clError = error as? CLError {
+            switch clError.code {
+            case .denied:
+                print("Location access denied")
+                locationError = NSError(domain: "LocationError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Location access denied."])
+            case .locationUnknown:
+                print("Location is currently unknown")
+                locationError = NSError(domain: "LocationError", code: 2, userInfo: [NSLocalizedDescriptionKey: "Unable to fetch location. Please try again."])
+            case .network:
+                print("Network issue while fetching location")
+                locationError = NSError(domain: "LocationError", code: 3, userInfo: [NSLocalizedDescriptionKey: "Network issue while fetching location."])
+            default:
+                print("Unexpected Core Location error: \(clError.localizedDescription)")
+                locationError = NSError(domain: "LocationError", code: 0, userInfo: [NSLocalizedDescriptionKey: clError.localizedDescription])
+            }
+        } else {
+            print("Unknown location error: \(error.localizedDescription)")
+            locationError = error
+        }
+        isRequestInProgress = false
     }
 
-    private func reverseGeocode(location: CLLocation) {
-        print("Starting reverse geocoding for location: \(location)")
-        geocoder.reverseGeocodeLocation(location) { [weak self] (placemarks, error) in
-            if let error = error {
-                self?.errorMessage = "Reverse geocoding failed: \(error.localizedDescription)"
-                print("Reverse geocoding failed: \(error.localizedDescription)")
-            } else if let placemark = placemarks?.first {
-                let locationName = placemark.locality ?? "Unknown Location"
-                self?.locationName = locationName
-                print("Reverse geocoding succeeded. Location name: \(locationName)")
-            }
+
+    func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
+        switch status {
+        case .authorizedWhenInUse, .authorizedAlways:
+            print("Authorization granted")
+            locationManager.requestLocation()
+        case .denied, .restricted:
+            print("Authorization denied or restricted")
+            locationError = NSError(domain: "LocationError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Location permission denied."])
+        case .notDetermined:
+            print("Authorization not determined yet")
+        default:
+            break
         }
     }
+
+
 }

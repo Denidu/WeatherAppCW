@@ -10,7 +10,8 @@ import SwiftUI
 struct SearchBarView: View {
     @AppStorage("locationInput") private var locationInput: String = ""
     @StateObject private var viewModel = WeatherViewModel()
-    @State private var debounceWorkItem: DispatchWorkItem? 
+    @State private var debounceWorkItem: DispatchWorkItem?
+    @State private var isNavigating: Bool = false // State to control navigation
 
     var body: some View {
         VStack {
@@ -25,7 +26,7 @@ struct SearchBarView: View {
                             let components = newValue.split(separator: ",").map {
                                 $0.trimmingCharacters(in: .whitespaces)
                             }
-                            
+
                             Task {
                                 if components.count == 1 {
                                     try await viewModel.fetchGeoData(city: components[0], state: "", country: "")
@@ -34,6 +35,8 @@ struct SearchBarView: View {
                                 } else if components.count == 3 {
                                     try await viewModel.fetchGeoData(city: components[0], state: components[1], country: components[2])
                                 }
+                                // Enable navigation to CityView when data is fetched
+                                isNavigating = viewModel.weatherDataModel != nil
                             }
                         }
 
@@ -47,6 +50,14 @@ struct SearchBarView: View {
                     .stroke(Color.gray, lineWidth: 2)
             )
             .padding()
+
+            // NavigationLink to CityView - only activate when weatherData is available
+            NavigationLink(
+                destination: CityView(weatherData: viewModel.weatherDataModel),
+                isActive: $isNavigating
+            ) {
+                EmptyView() // No visible content, only triggers navigation
+            }
         }
     }
 }

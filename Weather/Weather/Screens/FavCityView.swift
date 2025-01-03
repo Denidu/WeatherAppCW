@@ -5,44 +5,45 @@
 //  Created by Denidu Gamage on 2025-01-02.
 //
 
-//
-//  FavCityView.swift
-//  Weather
-//
-//  Created by Denidu Gamage on 2025-01-02.
-//
-
 import SwiftUI
 
 struct FavCityView: View {
-    @State private var favoriteCities: [GeoDataModel] = [] 
-    @StateObject private var viewModel = WeatherViewModel()
+    @AppStorage("favoriteCities") private var favoriteCities: String = ""
+    @State private var searchQuery: String = ""
+
+    private var favoriteCitiesArray: [String] {
+        favoriteCities.split(separator: ",").map { String($0) }.filter { !$0.isEmpty }
+    }
 
     var body: some View {
         NavigationView {
             VStack {
-
+                
                 SearchBarView()
-                    .padding()
-
-                List(favoriteCities) { city in
-                    VStack(alignment: .leading) {
-                        Text(city.name)
-                            .font(.title2)
-                            .bold()
-                        Text("\(city.country)")
-                            .font(.subheadline)
-                            .foregroundColor(.gray)
-                    }
-                    .padding()
-                    .background(Color.white)
-                    .cornerRadius(8)
-                    .shadow(radius: 5)
-                }
-                .listStyle(PlainListStyle())
-
-                NavigationLink("View Weather", destination: CityView(favoriteCities: $favoriteCities, viewModel: viewModel))
+                
+                if favoriteCitiesArray.isEmpty {
+                    Text("No favorite cities.")
+                        .font(.title2)
+                        .foregroundColor(.gray)
+                        .padding()
+                } else {
+                    ScrollView {
+                        ForEach(favoriteCitiesArray, id: \.self) { city in
+                            VStack(alignment: .leading, spacing: 10) {
+                                Text(city)
+                                    .font(.title2)
+                                    .fontWeight(.semibold)
                                     .padding()
+                                    .background(Color.blue.opacity(0.8))
+                                    .foregroundColor(.white)
+                                    .cornerRadius(10)
+                                    .shadow(radius: 5)
+                                    .padding(.horizontal)
+                            }
+                            .padding(.vertical, 5)
+                        }
+                    }
+                }
             }
             .navigationBarTitle("Weather")
         }
@@ -52,4 +53,3 @@ struct FavCityView: View {
 #Preview {
     FavCityView()
 }
-

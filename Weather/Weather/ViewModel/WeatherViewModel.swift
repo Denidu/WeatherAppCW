@@ -8,24 +8,29 @@
 import Foundation
 import CoreLocation
 import SwiftUI
+import Combine
 
 class WeatherViewModel: ObservableObject {
     @Published var weatherDataModel: WeatherDataModel?
     @Published var geoDataModel: GeoDataModel?
     @Published var errorMessage: String?
-
     private let apiClient = OpenweatherAPI()
-    private let locationManager = LocationManager()
+    let locationManager = LocationManager()
+    @Published var currentLocationName: String?
 
-    init(weatherData: WeatherDataModel? = nil, geoData: GeoDataModel? = nil) {
-        self.weatherDataModel = weatherData
-        self.geoDataModel = geoData
+    private var cancellables = Set<AnyCancellable>()
 
-        locationManager.onLocationUpdate = { [weak self] location in
-            Task {
-                await self?.fetchWeatherData(lat: location.latitude, lon: location.longitude)
+    init() {
+        locationManager.$currentLocation
+            .sink { [weak self] location in
+                if let location = location {
+                    Task {
+                        await self?.fetchWeatherData(lat: location.coordinate.latitude, lon: location.coordinate.longitude)
+                        await self?.fetchLocationName(lat: location.coordinate.latitude, lon: location.coordinate.longitude)
+                    }
+                }
             }
-        }
+            .store(in: &cancellables)
     }
 
     func fetchCurrentLocationWeather() {
@@ -34,7 +39,7 @@ class WeatherViewModel: ObservableObject {
 
     func fetchWeatherData(lat: Double, lon: Double) async {
         do {
-            let weatherData = try await withCheckedThrowingContinuation { continuation in
+            let rawData = try await withCheckedThrowingContinuation { continuation in
                 apiClient.fetchWeather(lat: lat, lon: lon) { weatherData, error in
                     if let weatherData = weatherData {
                         continuation.resume(returning: weatherData)
@@ -43,15 +48,38 @@ class WeatherViewModel: ObservableObject {
                     }
                 }
             }
-
             await MainActor.run {
-                self.weatherDataModel = weatherData
+                self.weatherDataModel = rawData
             }
         } catch {
             await MainActor.run {
                 self.errorMessage = error.localizedDescription
             }
         }
+    }
+
+    func fetchLocationName(lat: Double, lon: Double) async {
+        let geocoder = CLGeocoder()
+        let location = CLLocation(latitude: lat, longitude: lon)
+        geocoder.reverseGeocodeLocation(location) { [weak self] placemarks, error in
+            if let error = error {
+                DispatchQueue.main.async {
+                    self?.errorMessage = "Failed to get location name: \(error.localizedDescription)"
+                }
+            } else if let placemark = placemarks?.first {
+                DispatchQueue.main.async {
+                    self?.currentLocationName = placemark.locality ?? "Unknown Location"
+                }
+            } else {
+                DispatchQueue.main.async {
+                    self?.currentLocationName = "Unknown Location"
+                }
+            }
+        }
+    }
+
+    func handleLocationError(_ error: String) {
+        self.errorMessage = error
     }
 
     func fetchGeoData(city: String, state: String, country: String, limit: Int = 1) async throws {
@@ -78,8 +106,25 @@ class WeatherViewModel: ObservableObject {
             }
         }
     }
+    
+    func fetchWeatherForCity(city: String) async {
+        do {
+            let geoData = try await withCheckedThrowingContinuation { continuation in
+                apiClient.fetchCoordinates(city: city, state: "", country: "", limit: 1) { geoDataModel, error in
+                    if let geoDataModel = geoDataModel {
+                        continuation.resume(returning: geoDataModel)
+                    } else if let error = error {
+                        continuation.resume(throwing: error)
+                    }
+                }
+            }
 
-    func getWeatherDataForUI() -> (geoData: GeoDataModel?, weatherData: WeatherDataModel?) {
-        return (geoDataModel, weatherDataModel)
+            await fetchWeatherData(lat: geoData.lat, lon: geoData.lon)
+        } catch {
+            await MainActor.run {
+                self.errorMessage = error.localizedDescription
+            }
+        }
     }
+
 }
