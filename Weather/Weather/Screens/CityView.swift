@@ -33,7 +33,7 @@ struct CityView: View {
         NavigationView {
             ScrollView {
                 VStack {
-                    Spacer().frame(height: 40)  // Space before city name
+                    Spacer().frame(height: 40)
                     
                     if let weatherData = weatherData {
                         VStack(alignment: .center, spacing: 10) {
