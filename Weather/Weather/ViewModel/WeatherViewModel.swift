@@ -17,11 +17,10 @@ class WeatherViewModel: ObservableObject {
     private let apiClient = OpenweatherAPI()
     let locationManager = LocationManager()
     @Published var currentLocationName: String?
-
     private var cancellables = Set<AnyCancellable>()
 
     init() {
-        locationManager.$currentLocation
+        locationManager.$existingLocation
             .sink { [weak self] location in
                 if let location = location {
                     Task {

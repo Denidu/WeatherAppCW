@@ -8,19 +8,18 @@
 import SwiftUI
 
 struct TempBarView: View {
-    var min: Double
-    var max: Double
+    var tempMin: Double
+    var tempMax: Double
     
     var body: some View {
         HStack(spacing: 0) {
-            // Normalize the width calculation to a reasonable range for the screen
             Rectangle()
-                .fill(Color.gray) // Blue for the cooler range
-                .frame(width: CGFloat(min / (max + min) * 100)) // Normalized width based on the range
+                .fill(Color.gray)
+                .frame(width: CGFloat(tempMin / (tempMax + tempMin) * 100))
 
             Rectangle()
-                .fill(Color.orange) // Red for the warmer range
-                .frame(width: CGFloat(max / (max + min) * 100)) // Normalized width based on the range
+                .fill(Color.orange) 
+                .frame(width: CGFloat(tempMax / (tempMax + tempMin) * 100))
         }
         .cornerRadius(5)
         .frame(height: 5)
@@ -28,5 +27,5 @@ struct TempBarView: View {
 }
 
 #Preview {
-    TempBarView(min: 15, max: 20)
+    TempBarView(tempMin: 15, tempMax: 20)
 }

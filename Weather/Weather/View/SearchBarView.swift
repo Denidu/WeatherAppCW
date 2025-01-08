@@ -8,19 +8,19 @@
 import SwiftUI
 
 struct SearchBarView: View {
-    @AppStorage("locationInput") private var locationInput: String = ""
+    @AppStorage("userLocationInput") private var userLocationInput: String = ""
     @StateObject private var viewModel = WeatherViewModel()
-    @State private var debounceWorkItem: DispatchWorkItem?
-    @State private var isNavigating: Bool = false // State to control navigation
+    @State private var debounceItem: DispatchWorkItem?
+    @State private var isNavigate : Bool = false
 
     var body: some View {
         VStack {
             HStack {
                 Image(systemName: "magnifyingglass")
                     .foregroundColor(.gray)
-                TextField("Search for a city or country", text: $locationInput)
-                    .onChange(of: locationInput) { newValue in
-                        debounceWorkItem?.cancel()
+                TextField("Search for a city or country", text: $userLocationInput)
+                    .onChange(of: userLocationInput) { newValue in
+                        debounceItem?.cancel()
 
                         let newWorkItem = DispatchWorkItem {
                             let components = newValue.split(separator: ",").map {
@@ -35,13 +35,17 @@ struct SearchBarView: View {
                                 } else if components.count == 3 {
                                     try await viewModel.fetchGeoData(city: components[0], state: components[1], country: components[2])
                                 }
-                                // Enable navigation to CityView when data is fetched
-                                isNavigating = viewModel.weatherDataModel != nil
+
+                                if let lat = viewModel.geoDataModel?.lat, let lon = viewModel.geoDataModel?.lon {
+                                    await viewModel.fetchWeatherData(lat: lat, lon: lon)
+                                }
+
+                                isNavigate  = viewModel.weatherDataModel != nil
                             }
                         }
 
                         DispatchQueue.main.asyncAfter(deadline: .now() + 3, execute: newWorkItem)
-                        debounceWorkItem = newWorkItem
+                        debounceItem = newWorkItem
                     }
             }
             .padding()
@@ -51,12 +55,11 @@ struct SearchBarView: View {
             )
             .padding()
 
-            // NavigationLink to CityView - only activate when weatherData is available
             NavigationLink(
-                destination: CityView(weatherData: viewModel.weatherDataModel),
-                isActive: $isNavigating
+                destination: CityView(cityName: userLocationInput, weatherData: viewModel.weatherDataModel),
+                isActive: $isNavigate 
             ) {
-                EmptyView() // No visible content, only triggers navigation
+                EmptyView() 
             }
         }
     }

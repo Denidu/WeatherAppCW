@@ -8,24 +8,29 @@
 import SwiftUI
 
 struct CityView: View {
+    var cityName: String
     var weatherData: WeatherDataModel?
-    @AppStorage("locationInput") private var locationInput: String = ""
+    @AppStorage("userLocationInput") private var userLocationInput: String = ""
     @AppStorage("favoriteCities") private var favoriteCities: String = ""
     @Environment(\.presentationMode) var presentationMode
 
+    @StateObject private var weatherViewModel = WeatherViewModel()
+
+    @State private var isLoading: Bool = true
+
     private var isFavorite: Bool {
-        favoriteCities.split(separator: ",").contains(where: { $0.trimmingCharacters(in: .whitespaces) == locationInput })
+        favoriteCities.split(separator: ",").contains(where: { $0.trimmingCharacters(in: .whitespaces) == cityName })
     }
-    
-    private func toggleFavorite() {
+
+    private func switchFav() {
         var updatedFavorites = Set(favoriteCities.split(separator: ",").map { String($0) })
-        
+
         if isFavorite {
-            updatedFavorites.remove(locationInput)
+            updatedFavorites.remove(cityName)
         } else {
-            updatedFavorites.insert(locationInput)
+            updatedFavorites.insert(cityName)
         }
-        
+
         favoriteCities = updatedFavorites.joined(separator: ",")
     }
 
@@ -34,15 +39,19 @@ struct CityView: View {
             ScrollView {
                 VStack {
                     Spacer().frame(height: 40)
-                    
-                    if let weatherData = weatherData {
+
+                    if isLoading {
+                        ProgressView("Loading weather data...")
+                            .progressViewStyle(CircularProgressViewStyle())
+                            .padding()
+                    } else if let weatherData = weatherViewModel.weatherDataModel {
                         VStack(alignment: .center, spacing: 10) {
                             HStack {
-                                Text(locationInput)
+                                Text(cityName)
                                     .font(.system(size: 36, weight: .medium))
-                                
+
                                 Button(action: {
-                                    toggleFavorite()
+                                    switchFav()
                                 }) {
                                     Image(systemName: isFavorite ? "star.fill" : "star")
                                         .foregroundColor(.blue)
@@ -53,10 +62,10 @@ struct CityView: View {
 
                             Text("\(Int(weatherData.current.temp))°")
                                 .font(.system(size: 96, weight: .thin))
-                            
+
                             Text(weatherData.current.weather.first?.description.capitalized ?? "")
                                 .font(.title3)
-                            
+
                             Text("H:\(Int(weatherData.daily[0].temp.max))° L:\(Int(weatherData.daily[0].temp.min))°")
                                 .font(.title3)
                         }
@@ -67,7 +76,7 @@ struct CityView: View {
                             Text("HOURLY FORECAST")
                                 .font(.caption)
                                 .padding(.top)
-                            
+
                             ScrollView(.horizontal, showsIndicators: false) {
                                 HStack(spacing: 20) {
                                     ForEach(weatherData.hourly.prefix(6), id: \.dt) { hour in
@@ -77,7 +86,7 @@ struct CityView: View {
 
                                             let iconName = hour.weather.first?.icon ?? "default-icon"
                                             let iconUrl = "http://openweathermap.org/img/wn/\(iconName)@2x.png"
-                                            
+
                                             AsyncImage(url: URL(string: iconUrl)) { image in
                                                 image.resizable()
                                                     .scaledToFit()
@@ -85,7 +94,7 @@ struct CityView: View {
                                             } placeholder: {
                                                 ProgressView()
                                             }
-                                            
+
                                             Text("\(Int(hour.temp))°")
                                         }
                                     }
@@ -100,16 +109,16 @@ struct CityView: View {
                             Text("10-DAY FORECAST")
                                 .font(.caption)
                                 .padding(.top)
-                            
+
                             ForEach(weatherData.daily.prefix(6), id: \.dt) { day in
                                 HStack {
                                     let formattedDate = DateFormatterUtils.formattedDateWithWeekdayAndDay(from: TimeInterval(day.dt))
                                     Text(formattedDate)
                                     Spacer()
-                                    
+
                                     let iconName = day.weather.first?.icon ?? "default-icon"
                                     let iconUrl = "http://openweathermap.org/img/wn/\(iconName)@2x.png"
-                                    
+
                                     AsyncImage(url: URL(string: iconUrl)) { image in
                                         image.resizable()
                                             .scaledToFit()
@@ -117,10 +126,10 @@ struct CityView: View {
                                     } placeholder: {
                                         ProgressView()
                                     }
-                                    
+
                                     Text("\(Int(day.temp.min))°")
                                         .frame(width: 30, alignment: .trailing)
-                                    TempBarView(min: day.temp.min, max: day.temp.max)
+                                    TempBarView(tempMin: day.temp.min, tempMax: day.temp.max)
                                         .frame(width: 100)
                                     Text("\(Int(day.temp.max))°")
                                         .frame(width: 30, alignment: .trailing)
@@ -128,21 +137,31 @@ struct CityView: View {
                             }
                         }
                         .padding(.horizontal)
-                    }
-                    else {
+                        
+                    } else {
                         Text("No weather data available.")
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                             .multilineTextAlignment(.center)
                     }
                 }
                 .onAppear {
-                    print("Requesting location from CityView...")
+                    Task {
+                        isLoading = true
+                        do {
+                            try await weatherViewModel.fetchGeoData(city: cityName, state: "", country: "")
+                            isLoading = false
+                        } catch {
+                            isLoading = false
+                        }
+                    }
                 }
             }
+            .background(Color(hue: 0.565, saturation: 0.378, brightness: 0.994))
         }
+        .background(Color(hue: 0.565, saturation: 0.378, brightness: 0.994))
     }
 }
 
 #Preview {
-    CityView(weatherData: nil)
+    CityView(cityName: "", weatherData: nil)
 }

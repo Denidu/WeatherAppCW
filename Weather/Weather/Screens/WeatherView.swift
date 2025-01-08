@@ -8,16 +8,16 @@
 import SwiftUI
 
 struct WeatherView: View {
-    @StateObject private var viewModel = WeatherViewModel()
+    @StateObject private var weatherViewModelData = WeatherViewModel()
 
     var body: some View {
         NavigationView {
             ScrollView {
                 VStack {
                     Spacer().frame(height: 40)
-                    if let weatherData = viewModel.weatherDataModel {
+                    if let weatherData = weatherViewModelData.weatherDataModel {
                         VStack(alignment: .center) {
-                            Text(viewModel.currentLocationName ?? "Unknown Location")
+                            Text(weatherViewModelData.currentLocationName ?? "Unknown Location")
                                 .font(.system(size: 34, weight: .medium))
                             
                             Text("\(Int(weatherData.current.temp))°")
@@ -87,7 +87,7 @@ struct WeatherView: View {
                                     
                                     Text("\(Int(day.temp.min))°")
                                         .frame(width: 30, alignment: .trailing)
-                                    TempBarView(min: day.temp.min, max: day.temp.max)
+                                    TempBarView(tempMin: day.temp.min, tempMax: day.temp.max)
                                         .frame(width: 100)
                                     Text("\(Int(day.temp.max))°")
                                         .frame(width: 30, alignment: .trailing)
@@ -97,7 +97,7 @@ struct WeatherView: View {
                         }
                         .padding()
                         
-                    } else if let errorMessage = viewModel.errorMessage {
+                    } else if let errorMessage = weatherViewModelData.errorMessage {
                         Text(errorMessage)
                             .foregroundColor(.red)
                             .multilineTextAlignment(.center)
@@ -108,16 +108,17 @@ struct WeatherView: View {
                             .padding()
                     }
                 }
+                .background(Color(hue: 0.565, saturation: 0.378, brightness: 0.994))
                 .onAppear {
                     print("Requesting location from MainView...")
-                    viewModel.fetchCurrentLocationWeather()
+                    weatherViewModelData.fetchCurrentLocationWeather()
                 }
             }
-
+            .background(Color(hue: 0.565, saturation: 0.378, brightness: 0.994))
         }
+        .background(Color(hue: 0.565, saturation: 0.378, brightness: 0.994))
     }
 }
-
 
 #Preview {
     WeatherView()

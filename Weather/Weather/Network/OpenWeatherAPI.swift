@@ -35,27 +35,20 @@ class OpenweatherAPI {
         return "\(query)&limit=\(limit)&appid=\(apiKey)"
     }
     
+    
     func fetchWeather(lat: Double, lon: Double, completion: @escaping WeatherCompletionHandler) {
         let url = createWeatherURL(lat: lat, lon: lon)
         
         AF.request(url).validate().responseData { response in
             switch response.result {
             case .success(let data):
-                // Print the raw response data
-                if let rawResponse = String(data: data, encoding: .utf8) {
-                    print("Raw Weather Response: \(rawResponse)")
-                }
-                
                 do {
                     let decodedData = try JSONDecoder().decode(WeatherDataModel.self, from: data)
                     completion(decodedData, nil)
                 } catch let decodingError {
-                    print("Decoding error: \(decodingError.localizedDescription)")
-                    print("Decoding error details: \(decodingError)")
                     completion(nil, decodingError)
                 }
             case .failure(let error):
-                print("Error fetching weather data: \(error.localizedDescription)")
                 completion(nil, error)
             }
         }
