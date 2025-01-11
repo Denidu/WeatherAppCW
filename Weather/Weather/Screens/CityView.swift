@@ -45,10 +45,13 @@ struct CityView: View {
                             .progressViewStyle(CircularProgressViewStyle())
                             .padding()
                     } else if let weatherData = weatherViewModel.weatherDataModel {
-                        VStack(alignment: .center, spacing: 10) {
+                        VStack(alignment: .center) {
                             HStack {
                                 Text(cityName)
                                     .font(.system(size: 36, weight: .medium))
+                                    .padding(.leading)
+
+                                Spacer()
 
                                 Button(action: {
                                     switchFav()
@@ -56,20 +59,19 @@ struct CityView: View {
                                     Image(systemName: isFavorite ? "star.fill" : "star")
                                         .foregroundColor(.blue)
                                         .font(.title)
-                                        .padding(.leading)
+                                        .padding(.trailing)
                                 }
                             }
 
                             Text("\(Int(weatherData.current.temp))°")
-                                .font(.system(size: 96, weight: .thin))
-
+                                .font(.system(size: 94, weight: .thin))
+                            
                             Text(weatherData.current.weather.first?.description.capitalized ?? "")
                                 .font(.title3)
-
+                            
                             Text("H:\(Int(weatherData.daily[0].temp.max))° L:\(Int(weatherData.daily[0].temp.min))°")
                                 .font(.title3)
                         }
-                        .padding()
 
                         // Hourly forecast
                         VStack(alignment: .leading, spacing: 20) {
@@ -102,10 +104,10 @@ struct CityView: View {
                                 .padding(.horizontal)
                             }
                         }
-                        .padding()
+                        .padding(.horizontal)
 
                         // 10-day forecast
-                        VStack(alignment: .leading, spacing: 10) {
+                        VStack(alignment: .leading, spacing: 15) {
                             Text("10-DAY FORECAST")
                                 .font(.caption)
                                 .padding(.top)
@@ -114,6 +116,8 @@ struct CityView: View {
                                 HStack {
                                     let formattedDate = DateFormatterUtils.formattedDateWithWeekdayAndDay(from: TimeInterval(day.dt))
                                     Text(formattedDate)
+                                        .padding(.leading)
+
                                     Spacer()
 
                                     let iconName = day.weather.first?.icon ?? "default-icon"
@@ -129,8 +133,10 @@ struct CityView: View {
 
                                     Text("\(Int(day.temp.min))°")
                                         .frame(width: 30, alignment: .trailing)
+
                                     TempBarView(tempMin: day.temp.min, tempMax: day.temp.max)
                                         .frame(width: 100)
+
                                     Text("\(Int(day.temp.max))°")
                                         .frame(width: 30, alignment: .trailing)
                                 }
@@ -144,6 +150,7 @@ struct CityView: View {
                             .multilineTextAlignment(.center)
                     }
                 }
+                .padding(.top, 20)
                 .onAppear {
                     Task {
                         isLoading = true
@@ -157,6 +164,7 @@ struct CityView: View {
                 }
             }
             .background(Color(hue: 0.565, saturation: 0.378, brightness: 0.994))
+            .navigationBarHidden(true)
         }
         .background(Color(hue: 0.565, saturation: 0.378, brightness: 0.994))
     }

@@ -2,11 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+    <!-- Location usage descriptions -->
     <key>NSLocationWhenInUseUsageDescription</key>
     <string>We need your location to show weather data.</string>
     <key>NSLocationAlwaysUsageDescription</key>
     <string>We need your location to show weather data even when the app is in the background.</string>
-    
+
     <!-- App Transport Security configuration -->
     <key>NSAppTransportSecurity</key>
     <dict>
@@ -21,5 +22,9 @@
             </dict>
         </dict>
     </dict>
+    
+    <!-- API Key for OpenWeather -->
+    <key>OpenWeatherAPIKey</key>
+    <string>fcf4c07675ec77204b1bf07ee7020888</string>
 </dict>
 </plist>

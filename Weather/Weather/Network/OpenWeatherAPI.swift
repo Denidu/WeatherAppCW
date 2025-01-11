@@ -11,9 +11,14 @@ import Alamofire
 class OpenweatherAPI {
     typealias WeatherCompletionHandler = (WeatherDataModel?, Error?) -> Void
     typealias GeoCompletionHandler = (GeoDataModel?, Error?) -> Void
-    
-    private let apiKey = "fcf4c07675ec77204b1bf07ee7020888"
-    
+
+    private var apiKey: String {
+        guard let apiKey = Bundle.main.object(forInfoDictionaryKey: "OpenWeatherAPIKey") as? String else {
+            fatalError("API Key not found in Info.plist")
+        }
+        return apiKey
+    }
+
     private func createWeatherURL(lat: Double, lon: Double) -> String {
         let baseURL = "https://api.openweathermap.org/data/3.0/onecall"
         var url = "\(baseURL)?lat=\(lat)&lon=\(lon)&units=metric&appid=\(apiKey)"
