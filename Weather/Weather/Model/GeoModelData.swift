@@ -7,8 +7,6 @@
 
 import Foundation
 
-import Foundation
-
 class GeoDataModel: Codable, Identifiable{
     let name: String
     let localNames: [String:String]?

@@ -4,12 +4,11 @@
 //
 //  Created by Denidu Gamage on 2024-12-29.
 //
-
 import SwiftUI
 
 struct MainView: View {
     @State private var activeTab: Int = 1
-
+    
     var body: some View {
         VStack(spacing: 0) {
             ZStack {
@@ -32,7 +31,9 @@ struct MainView: View {
                         .foregroundColor(activeTab == 0 ? .blue : .white)
                         .padding()
                 }
+                
                 Spacer()
+                
                 Button(action: {
                     activeTab = 1
                 }) {
@@ -41,7 +42,9 @@ struct MainView: View {
                         .foregroundColor(activeTab == 1 ? .blue : .white)
                         .padding()
                 }
+                
                 Spacer()
+                
                 Button(action: {
                     activeTab = 2
                 }) {
@@ -50,14 +53,17 @@ struct MainView: View {
                         .foregroundColor(activeTab == 2 ? .blue : .white)
                         .padding()
                 }
+                
                 Spacer()
             }
             .frame(height: 60)
-            .background(Color.blue.opacity(0.3))
+            .background(LinearGradient(gradient: Gradient(colors: [Color.blue.opacity(0.4), Color.purple.opacity(0.4)]),
+                                       startPoint: .topLeading, endPoint: .bottomTrailing))
             .edgesIgnoringSafeArea(.all)
         }
-        .background(Color.blue.opacity(0.3))
-        .edgesIgnoringSafeArea(.bottom)
+        .background(LinearGradient(gradient: Gradient(colors: [Color.blue.opacity(0.4), Color.purple.opacity(0.4)]),
+                                   startPoint: .topLeading, endPoint: .bottomTrailing)
+            .edgesIgnoringSafeArea(.all))
     }
 }
 

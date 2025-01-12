@@ -39,7 +39,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
             isRequesting = false
         }
     }
-
+    
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.first else {
             return
@@ -61,13 +61,11 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
                 locationError = NSError(domain: "LocationError", code: 0, userInfo: [NSLocalizedDescriptionKey: clError.localizedDescription])
             }
         } else {
-            print("Unknown location error: \(error.localizedDescription)")
             locationError = error
         }
         isRequesting = false
     }
-
-
+    
     func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
         switch status {
         case .authorizedWhenInUse, .authorizedAlways:

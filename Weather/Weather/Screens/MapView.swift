@@ -21,93 +21,93 @@ struct MapView: View {
     @State private var isLoading: Bool = true
     @State private var searchText: String = ""
     @State private var annotations: [MKPointAnnotation] = []
-
+    
     var favoriteCitiesArr: [String] {
         favoriteCities.split(separator: ",").map { String($0) }.filter { !$0.isEmpty }
     }
-
+    
     var body: some View {
         NavigationView {
             ZStack {
-                    if let location = locationManager.existingLocation {
-                        Map(coordinateRegion: $area, annotationItems: annotationItems()) { annotation in
-                            MapAnnotation(coordinate: annotation.coordinate) {
-                                VStack {
-                                    Image(systemName: annotation.isCurrentLocation ? "location.circle.fill" : "mappin.and.ellipse.circle.fill")
-                                        .resizable()
-                                        .frame(width: 30, height: 30)
-                                        .foregroundColor(annotation.isCurrentLocation ? .blue : .blue)
-                                    if !annotation.isCurrentLocation {
-                                        Text(annotation.id)
-                                            .font(.caption)
-                                            .foregroundColor(.black)
-                                    }
+                if let location = locationManager.existingLocation {
+                    Map(coordinateRegion: $area, annotationItems: annotationItems()) { annotation in
+                        MapAnnotation(coordinate: annotation.coordinate) {
+                            VStack {
+                                Image(systemName: annotation.isCurrentLocation ? "location.circle.fill" : "mappin.and.ellipse.circle.fill")
+                                    .resizable()
+                                    .frame(width: 30, height: 30)
+                                    .foregroundColor(annotation.isCurrentLocation ? .blue : .blue)
+                                if !annotation.isCurrentLocation {
+                                    Text(annotation.id)
+                                        .font(.caption)
+                                        .foregroundColor(.black)
                                 }
-                                .onTapGesture {
-                                    if !annotation.isCurrentLocation {
-                                        Task {
-                                            await weatherViewModel.fetchWeatherForCity(city: annotation.id)
-                                            selectedCity = annotation.id
-                                        }
+                            }
+                            .onTapGesture {
+                                if !annotation.isCurrentLocation {
+                                    Task {
+                                        await weatherViewModel.fetchWeatherForCity(city: annotation.id)
+                                        selectedCity = annotation.id
                                     }
                                 }
                             }
                         }
-                        .edgesIgnoringSafeArea(.all)
-                        .onAppear {
-                            loadFavoriteCityCoordinates()
-                            area.center = location.coordinate
-                            isLoading = false
-                        }
                     }
+                    .edgesIgnoringSafeArea(.all)
+                    .onAppear {
+                        loadFavoriteCityCoordinates()
+                        area.center = location.coordinate
+                        isLoading = false
+                    }
+                }
                 
                 VStack {
-                        MapSearchBarView(searchText: $searchText, onSearch: searchPlaces)
-                            .padding(.top)
-                            .background(Color.white.opacity(0.7))
-                        Spacer()
-                    }
-                    if isLoading {
-                        ProgressView("Fetching location...")
-                            .progressViewStyle(CircularProgressViewStyle())
-                            .padding()
-                    } else if let error = locationManager.locationError {
-                        VStack {
-                            Text("Error: \(error.localizedDescription)")
-                                .foregroundColor(.red)
-                                .padding()
-                        }
-                    }
-
-                    VStack {
-                        Spacer()
-                        HStack {
-                            Spacer()
-                            VStack {
-                                Button(action: zoomIn) {
-                                    Image(systemName: "plus.circle.fill")
-                                        .resizable()
-                                        .frame(width: 30, height: 30)
-                                        .foregroundColor(.gray)
-                                }
-                                .padding(.bottom, 10)
-                                Button(action: zoomOut) {
-                                    Image(systemName: "minus.circle.fill")
-                                        .resizable()
-                                        .frame(width: 30, height: 30)
-                                        .foregroundColor(.gray)
-                                }
-                            }
-                            .padding()
-                        }
-                    }
-                    
-                    NavigationLink(
-                        destination: CityView(cityName: selectedCity ?? "", weatherData: weatherViewModel.weatherDataModel),
-                        isActive: Binding(get: { selectedCity != nil }, set: { _ in selectedCity = nil }),
-                        label: { EmptyView() }
-                    )
+                    MapSearchBarView(searchText: $searchText, onSearch: searchPlaces)
+                        .padding(.top)
+                        .background(Color.white.opacity(0.7))
+                    Spacer()
                 }
+                if isLoading {
+                    ProgressView("Fetching location...")
+                        .progressViewStyle(CircularProgressViewStyle())
+                        .padding()
+                } else if let error = locationManager.locationError {
+                    VStack {
+                        Text("Error: \(error.localizedDescription)")
+                            .foregroundColor(.red)
+                            .padding()
+                    }
+                }
+                
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        VStack {
+                            Button(action: zoomIn) {
+                                Image(systemName: "plus.circle.fill")
+                                    .resizable()
+                                    .frame(width: 30, height: 30)
+                                    .foregroundColor(.gray)
+                            }
+                            .padding(.bottom, 10)
+                            Button(action: zoomOut) {
+                                Image(systemName: "minus.circle.fill")
+                                    .resizable()
+                                    .frame(width: 30, height: 30)
+                                    .foregroundColor(.gray)
+                            }
+                        }
+                        .padding()
+                    }
+                }
+                
+                NavigationLink(
+                    destination: CityView(cityName: selectedCity ?? "", weatherData: weatherViewModel.weatherDataModel),
+                    isActive: Binding(get: { selectedCity != nil }, set: { _ in selectedCity = nil }),
+                    label: { EmptyView() }
+                )
+            }
         }
         .onAppear {
             locationManager.requestLocation()
@@ -119,14 +119,14 @@ struct MapView: View {
         request.naturalLanguageQuery = "tourist attractions in \(searchText)"
         request.region = area
         request.resultTypes = [.pointOfInterest]
-
+        
         let search = MKLocalSearch(request: request)
         search.start { response, error in
             if let error = error {
                 print("Error searching for places: \(error.localizedDescription)")
                 return
             }
-
+            
             if let response = response {
                 let topResults = response.mapItems.prefix(5)
                 annotations = topResults.compactMap { item in
@@ -140,7 +140,7 @@ struct MapView: View {
             }
         }
     }
-
+    
     private func annotationItems() -> [CityAnnotation] {
         var allAnnotations = favoriteCityCoordinates.map { CityAnnotation(id: $0.key, coordinate: $0.value) }
         if let location = locationManager.existingLocation {
@@ -151,7 +151,7 @@ struct MapView: View {
         })
         return allAnnotations
     }
-
+    
     private func loadFavoriteCityCoordinates() {
         Task {
             for city in favoriteCitiesArr {
@@ -159,7 +159,7 @@ struct MapView: View {
             }
         }
     }
-
+    
     private func fetchCoordinates(for city: String) async -> CLLocationCoordinate2D {
         do {
             try await weatherViewModel.fetchGeoData(city: city, state: "", country: "")
@@ -171,7 +171,7 @@ struct MapView: View {
         }
         return CLLocationCoordinate2D(latitude: 0, longitude: 0)
     }
-
+    
     private func zoomIn() {
         let newSpan = MKCoordinateSpan(
             latitudeDelta: area.span.latitudeDelta / 1.5,
@@ -179,7 +179,7 @@ struct MapView: View {
         )
         area.span = newSpan
     }
-
+    
     private func zoomOut() {
         let newSpan = MKCoordinateSpan(
             latitudeDelta: area.span.latitudeDelta * 1.5,
@@ -187,22 +187,22 @@ struct MapView: View {
         )
         area.span = newSpan
     }
-
+    
     private func adjustMapRegion() {
         var minLat = annotations.map { $0.coordinate.latitude }.min() ?? area.center.latitude
         var maxLat = annotations.map { $0.coordinate.latitude }.max() ?? area.center.latitude
         var minLon = annotations.map { $0.coordinate.longitude }.min() ?? area.center.longitude
         var maxLon = annotations.map { $0.coordinate.longitude }.max() ?? area.center.longitude
-
+        
         let padding: CLLocationDegrees = 0.05
         minLat -= padding
         maxLat += padding
         minLon -= padding
         maxLon += padding
-
+        
         let centerLat = (minLat + maxLat) / 2
         let centerLon = (minLon + maxLon) / 2
-
+        
         area.center = CLLocationCoordinate2D(latitude: centerLat, longitude: centerLon)
         area.span = MKCoordinateSpan(
             latitudeDelta: maxLat - minLat,

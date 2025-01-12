@@ -13,15 +13,15 @@ struct DailyWeatherCellView: View {
     var temperatureMax: String {
         return "\(Int((weatherData.daily.first?.temp.max ?? 0)))°C"
     }
-
+    
     var temperatureMin: String {
         return "\(Int((weatherData.daily.first?.temp.min ?? 0)))°C"
     }
-
+    
     var day: String {
         return DateFormatterUtils.formattedDateWithWeekdayAndDay(from: TimeInterval(weatherData.daily.first?.dt ?? 0))
     }
-
+    
     var icon: String {
         return weatherData.daily.first?.weather.first?.icon ?? "default-icon"
     }
@@ -30,12 +30,12 @@ struct DailyWeatherCellView: View {
         HStack {
             Text(day)
                 .frame(width: 150, alignment: .leading)
-
+            
             Image(systemName: icon)
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 30, height: 30)
-
+            
             Spacer()
             Text(temperatureMax)
             Spacer().frame(width: 34)

@@ -9,12 +9,15 @@ import SwiftUI
 
 struct WeatherView: View {
     @StateObject private var weatherViewModelData = WeatherViewModel()
-
+    
     var body: some View {
         NavigationView {
             ScrollView {
                 VStack {
                     Spacer().frame(height: 40)
+                        .background(LinearGradient(gradient: Gradient(colors: [Color.blue.opacity(0.4), Color.purple.opacity(0.4)]),
+                                                   startPoint: .topLeading, endPoint: .bottomTrailing)
+                            .edgesIgnoringSafeArea(.all))
                     if let weatherData = weatherViewModelData.weatherDataModel {
                         VStack(alignment: .center) {
                             Text(weatherViewModelData.currentLocationName ?? "Unknown Location")
@@ -108,15 +111,23 @@ struct WeatherView: View {
                             .padding()
                     }
                 }
-                .background(Color(hue: 0.565, saturation: 0.378, brightness: 0.994))
+                .background(LinearGradient(gradient: Gradient(colors: [Color.blue.opacity(0.4), Color.purple.opacity(0.4)]),
+                                           startPoint: .topLeading, endPoint: .bottomTrailing)
+                    .edgesIgnoringSafeArea(.all))
                 .onAppear {
                     print("Requesting location from MainView...")
                     weatherViewModelData.fetchCurrentLocationWeather()
                 }
             }
-            .background(Color(hue: 0.565, saturation: 0.378, brightness: 0.994))
+            .background(LinearGradient(gradient: Gradient(colors: [Color.blue.opacity(0.4), Color.purple.opacity(0.4)]),
+                                       startPoint: .topLeading, endPoint: .bottomTrailing)
+                .edgesIgnoringSafeArea(.all))
+            
         }
-        .background(Color(hue: 0.565, saturation: 0.378, brightness: 0.994))
+        .background(LinearGradient(gradient: Gradient(colors: [Color.blue.opacity(0.4), Color.purple.opacity(0.4)]),
+                                   startPoint: .topLeading, endPoint: .bottomTrailing)
+            .edgesIgnoringSafeArea(.all))
+        
     }
 }
 

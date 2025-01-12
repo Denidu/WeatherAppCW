@@ -11,32 +11,43 @@ struct FavCityView: View {
     @AppStorage("favoriteCities") private var favoriteCities: String = ""
     @State private var searchInputs: String = ""
     @State private var selectedCity: String?
-
+    
     private var favoriteCitiesArr: [String] {
         favoriteCities.split(separator: ",").map { String($0) }.filter { !$0.isEmpty }
     }
-
+    
     private func deleteCity(_ city: String) {
         favoriteCities = favoriteCitiesArr.filter { $0 != city }.joined(separator: ",")
     }
-
+    
     var body: some View {
         NavigationView {
             ZStack {
-                Color(hue: 0.565, saturation: 0.378, brightness: 0.994)
-                    .edgesIgnoringSafeArea(.all)
-
+                LinearGradient(gradient: Gradient(colors: [Color.blue.opacity(0.4), Color.purple.opacity(0.4)]),
+                               startPoint: .topLeading, endPoint: .bottomTrailing)
+                .edgesIgnoringSafeArea(.all)
                 VStack {
                     SearchBarView()
                         .padding(.top)
-
+                        .background(LinearGradient(gradient: Gradient(colors: [Color.blue.opacity(0.4), Color.purple.opacity(0.4)]),
+                                                   startPoint: .topLeading, endPoint: .bottomTrailing)
+                            .edgesIgnoringSafeArea(.all))
+                    
                     List {
                         if favoriteCitiesArr.isEmpty {
-                            Text("No favorite cities.")
-                                .font(.title2)
-                                .foregroundColor(.gray)
-                                .padding()
-                                .background(Color.clear)
+                            Section {
+                                Text("No favorite cities.")
+                                    .font(.title2)
+                                    .foregroundColor(.black)
+                                    .padding()
+                                    .listRowBackground(
+                                        LinearGradient(
+                                            gradient: Gradient(colors: [Color.blue.opacity(0.4), Color.purple.opacity(0.4)]),
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                            }
                         } else {
                             ForEach(favoriteCitiesArr.filter { city in
                                 searchInputs.isEmpty || city.lowercased().contains(searchInputs.lowercased())
@@ -52,13 +63,19 @@ struct FavCityView: View {
                                     .onTapGesture {
                                         selectedCity = city
                                     }
-                                    .listRowBackground(Color(hue: 0.565, saturation: 0.378, brightness: 0.994))
+                                    .listRowBackground(
+                                        LinearGradient(
+                                            gradient: Gradient(colors: [Color.blue.opacity(0.4), Color.purple.opacity(0.4)]),
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
                             }
                         }
                     }
                     .listStyle(PlainListStyle())
-                    .background(Color.clear)
-
+                    
+                    
                     NavigationLink(
                         destination: CityView(cityName: selectedCity ?? ""),
                         tag: selectedCity ?? "",
@@ -69,6 +86,9 @@ struct FavCityView: View {
                 }
             }
             .navigationBarTitle("Weather")
+            .background(LinearGradient(gradient: Gradient(colors: [Color.blue.opacity(0.4), Color.purple.opacity(0.4)]),
+                                       startPoint: .topLeading, endPoint: .bottomTrailing)
+                .edgesIgnoringSafeArea(.all))
         }
     }
 }
@@ -80,10 +100,10 @@ struct CityCardView: View {
     
     var body: some View {
         ZStack {
-           
-            RoundedRectangle(cornerRadius: 20)
-                .fill(Color(red: 89 / 255, green: 171 / 255, blue: 227 / 255))
-
+            LinearGradient(gradient: Gradient(colors: [Color.blue.opacity(0.6), Color.green.opacity(0.6)]),
+                           startPoint: .topLeading, endPoint: .bottomTrailing)
+            .cornerRadius(20)
+            .shadow(radius: 5)
             if isLoading {
                 ProgressView("Loading...")
                     .progressViewStyle(CircularProgressViewStyle(tint: .white))

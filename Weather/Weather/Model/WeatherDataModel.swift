@@ -38,7 +38,6 @@ struct WeatherDataModel: Codable, Identifiable {
     
 }
 
-// MARK: - Current
 struct Current: Codable, Identifiable {
     let id = UUID()
     let dt: Int
@@ -89,7 +88,6 @@ struct Current: Codable, Identifiable {
     }
 }
 
-// MARK: - Rain
 struct Rain: Codable{
     let the1H: Double
 
@@ -101,7 +99,6 @@ struct Rain: Codable{
     }
 }
 
-// MARK: - Weather
 struct Weather: Codable {
     let id: Int
     let main: Main
@@ -121,7 +118,6 @@ struct Weather: Codable {
         )
     }
 }
-
 
 enum Main: String, Codable {
     case clear = "Clear"
@@ -201,7 +197,6 @@ enum Description: String, Codable {
     case overcastClouds85100 = "overcast clouds: 85-100%"
 }
 
-// MARK: - Daily
 struct Daily: Codable, Identifiable {
     let id = UUID()
     let dt, sunrise, sunset, moonrise: Int
@@ -256,7 +251,6 @@ struct Daily: Codable, Identifiable {
     }
 }
 
-// MARK: - FeelsLike
 struct FeelsLike: Codable{
     let day, night, eve, morn: Double
     
@@ -268,7 +262,6 @@ struct FeelsLike: Codable{
     }
 }
 
-// MARK: - Temp
 struct Temp: Codable{
     let day, min, max, night: Double
     let eve, morn: Double
@@ -281,7 +274,6 @@ struct Temp: Codable{
    }
 }
 
-// MARK: - Minutely
 struct Minutely: Codable {
     let dt: Int
     let precipitation: Double
